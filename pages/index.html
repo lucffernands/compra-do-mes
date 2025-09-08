@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Compra do Mês - Preços do Bacon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Compra do Mês</h1>
+    <button id="buscar">Buscar Preços</button>
+    <div id="resultado"></div>
+  </div>
+
+  <script>
+    document.getElementById('buscar').addEventListener('click', async () => {
+      try {
+        const res = await fetch('precos.json');
+        const produtos = await res.json();
+        const resultadoDiv = document.getElementById('resultado');
+
+        resultadoDiv.innerHTML = produtos.map(p => 
+          `<div class="produto">
+            <span class="nome">${p.produto}</span> -
+            <span class="supermercado">${p.supermercado}</span> -
+            <span class="preco">${p.preco_por_kg.toFixed(2)} R$/kg</span>
+          </div>`
+        ).join('');
+      } catch (err) {
+        document.getElementById('resultado').innerHTML = "Erro ao buscar preços.";
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
