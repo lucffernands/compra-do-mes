@@ -32,7 +32,11 @@ def main():
         a_tag = nome_span.find_parent("a")
         preco_span = a_tag.find("span", class_="price")
         nome = nome_span.get_text(strip=True)
-        preco_str = preco_span.get_text(strip=True).replace("R$", "").replace(",", ".")
+        preco_str = preco_span.get_text(strip=True)
+        
+        # Remove R$, espaços e qualquer coisa após o número
+        preco_str = preco_str.replace("R$", "").split("/")[0].replace(",", ".").strip()
+        
         preco = float(preco_str)
         peso_kg = extrair_peso(nome)
         preco_kg = round(preco / peso_kg, 2)
