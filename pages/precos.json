@@ -1,0 +1,20 @@
+[
+  {
+    "supermercado": "Goodbom",
+    "produto": "BACON FATIADO PERDIGÃO 250G",
+    "preco": 18.99,
+    "preco_por_kg": 75.96
+  },
+  {
+    "supermercado": "Goodbom",
+    "produto": "BACON PALETA CATABY TABLET KG",
+    "preco": 56.9,
+    "preco_por_kg": 56.9
+  },
+  {
+    "supermercado": "Goodbom",
+    "produto": "BACON MANTA SADIA KG",
+    "preco": 40.9,
+    "preco_por_kg": 40.9
+  }
+]
