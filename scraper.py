@@ -6,7 +6,7 @@ import re
 # Configurações
 BASE_URL = "https://www.goodbom.com.br/hortolandia/busca?q="
 PRODUTO = "bacon"
-OUTPUT_JSON = "pages/precos.json"
+OUTPUT_JSON = "docs/precos.json"
 SUPERMERCADO = "Goodbom"
 NUM_PRODUTOS = 3
 
