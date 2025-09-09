@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Compra do Mês - Preços do Bacon</title>
+  <title>Compra do Mês</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,17 +15,30 @@
   <script>
     document.getElementById('buscar').addEventListener('click', async () => {
       try {
-        const res = await fetch('precos.json');
+        const res = await fetch('prices.json'); // corrigido
         const produtos = await res.json();
         const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.innerHTML = '';
 
-        resultadoDiv.innerHTML = produtos.map(p => 
-          `<div class="produto">
+        let total = 0;
+
+        produtos.forEach(p => {
+          total += p.preco_por_kg;
+          const div = document.createElement('div');
+          div.className = 'produto';
+          div.innerHTML = `
             <span class="nome">${p.produto}</span> -
             <span class="supermercado">${p.supermercado}</span> -
             <span class="preco">${p.preco_por_kg.toFixed(2)} R$/kg</span>
-          </div>`
-        ).join('');
+          `;
+          resultadoDiv.appendChild(div);
+        });
+
+        const totalDiv = document.createElement('div');
+        totalDiv.className = 'total';
+        totalDiv.innerHTML = `<strong>TOTAL: R$ ${total.toFixed(2)}</strong>`;
+        resultadoDiv.appendChild(totalDiv);
+
       } catch (err) {
         document.getElementById('resultado').innerHTML = "Erro ao buscar preços.";
         console.error(err);
