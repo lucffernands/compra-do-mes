@@ -15,30 +15,32 @@
   <script>
     document.getElementById('buscar').addEventListener('click', async () => {
       try {
-        const res = await fetch('prices.json'); // corrigido
-        const produtos = await res.json();
+        const res = await fetch('prices.json');
+        const data = await res.json();
         const resultadoDiv = document.getElementById('resultado');
-        resultadoDiv.innerHTML = '';
+        resultadoDiv.innerHTML = "";
 
-        let total = 0;
+        for (const mercado in data) {
+          const carrinho = data[mercado];
+          let html = `<h2>${mercado}</h2>`;
 
-        produtos.forEach(p => {
-          total += p.preco_por_kg;
-          const div = document.createElement('div');
-          div.className = 'produto';
-          div.innerHTML = `
-            <span class="nome">${p.produto}</span> -
-            <span class="supermercado">${p.supermercado}</span> -
-            <span class="preco">${p.preco_por_kg.toFixed(2)} R$/kg</span>
-          `;
-          resultadoDiv.appendChild(div);
-        });
+          if (carrinho.produtos.length > 0) {
+            html += "<ul>";
+            carrinho.produtos.forEach(p => {
+              html += `<li>${p.produto} - ${p.preco_por_kg.toFixed(2)} R$/kg (R$ ${p.preco.toFixed(2)})</li>`;
+            });
+            html += "</ul>";
+          } else {
+            html += "<p>Nenhum produto encontrado.</p>";
+          }
 
-        const totalDiv = document.createElement('div');
-        totalDiv.className = 'total';
-        totalDiv.innerHTML = `<strong>TOTAL: R$ ${total.toFixed(2)}</strong>`;
-        resultadoDiv.appendChild(totalDiv);
+          html += `<p><strong>Total:</strong> R$ ${carrinho.total.toFixed(2)}</p>`;
+          if (carrinho.faltando > 0) {
+            html += `<p><em>Faltaram ${carrinho.faltando} produtos</em></p>`;
+          }
 
+          resultadoDiv.innerHTML += html;
+        }
       } catch (err) {
         document.getElementById('resultado').innerHTML = "Erro ao buscar preços.";
         console.error(err);
