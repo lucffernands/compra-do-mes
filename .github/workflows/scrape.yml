@@ -1,7 +1,7 @@
 name: Scraper Goodbom
 
 on:
-  workflow_dispatch:  # Permite rodar manualmente pelo GitHub
+  workflow_dispatch:
 
 jobs:
   scrape:
@@ -29,5 +29,5 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add docs/prices.json
-          git commit -m "Atualiza precos.json via workflow" || echo "Nada para commitar"
+          git commit -m "Atualiza prices.json via workflow" || echo "Nada para commitar"
           git push
