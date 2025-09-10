@@ -1,7 +1,22 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import re
+import r
+
+#Teste Arena
+def nomes_batem(produto_busca, nome_site):
+    # deixa tudo em minúsculo
+    p = produto_busca.lower()
+    n = nome_site.lower()
+
+    # divide em palavras
+    palavras_p = set(p.split())
+    palavras_n = set(n.split())
+
+    # exige que pelo menos metade das palavras do termo de busca estejam no nome encontrado
+    intersecao = palavras_p.intersection(palavras_n)
+    return len(intersecao) >= max(1, len(palavras_p) // 2)
+#--------------
 
 # Configurações
 GOODBOM_URL = "https://www.goodbom.com.br/hortolandia/busca?q="
@@ -77,7 +92,7 @@ def buscar_arena(produto):
                 continue
 
             nome = nome_span.get_text(strip=True)
-            if produto.lower() not in nome.lower():
+            if not nomes_batem(produto, nome): 
                 continue
 
             preco_str = preco_span.get_text(strip=True).replace("R$", "").replace(".", "").replace(",", ".").strip()
