@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import r
+import re
 
 #Teste Arena
 def nomes_batem(produto_busca, nome_site):
