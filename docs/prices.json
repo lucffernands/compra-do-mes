@@ -27,14 +27,14 @@
         "preco_por_kg": 22.99
       },
       {
-        "produto": "SALSICHA HOT DOG SADIA KG",
-        "preco": 13.89,
-        "preco_por_kg": 13.89
+        "produto": "BISTECA COPA LOMBO KG",
+        "preco": 24.98,
+        "preco_por_kg": 24.98
       },
       {
-        "produto": "OVOS BRANCO GRANDE COM 20",
-        "preco": 9.99,
-        "preco_por_kg": 9.99
+        "produto": "OVOS TIPO CAIPIRA COM 10",
+        "preco": 13.99,
+        "preco_por_kg": 13.99
       },
       {
         "produto": "BATATA IACOM KG",
@@ -48,8 +48,8 @@
       },
       {
         "produto": "TOMATE ESPECIAL KG",
-        "preco": 3.99,
-        "preco_por_kg": 3.99
+        "preco": 5.99,
+        "preco_por_kg": 5.99
       },
       {
         "produto": "PIMENTÃO  VERDE KG",
@@ -63,8 +63,8 @@
       },
       {
         "produto": "VAGEM MACARRÃO KG",
-        "preco": 14.99,
-        "preco_por_kg": 14.99
+        "preco": 9.99,
+        "preco_por_kg": 9.99
       },
       {
         "produto": "SEMENTE FELTRIN QUIABO SANTA CRUZ",
@@ -78,8 +78,8 @@
       },
       {
         "produto": "ABOBRINHA ITÁLIA KG",
-        "preco": 8.99,
-        "preco_por_kg": 8.99
+        "preco": 4.99,
+        "preco_por_kg": 4.99
       },
       {
         "produto": "BETERRABA KG",
@@ -103,8 +103,8 @@
       },
       {
         "produto": "CHUCHU KG",
-        "preco": 6.99,
-        "preco_por_kg": 6.99
+        "preco": 7.99,
+        "preco_por_kg": 7.99
       },
       {
         "produto": "MANDIOQUINHA KG",
@@ -112,19 +112,19 @@
         "preco_por_kg": 15.99
       },
       {
-        "produto": "CHEIRO VERDE MC",
-        "preco": 1.99,
-        "preco_por_kg": 1.99
+        "produto": "TEMPERO  MAGGI MEU SEGREDO CHEIRO VERDE 49G",
+        "preco": 4.39,
+        "preco_por_kg": 89.59
       },
       {
-        "produto": "ALFACE CRESPA UN",
-        "preco": 1.99,
-        "preco_por_kg": 1.99
+        "produto": "ALFACE ROXA UN",
+        "preco": 4.99,
+        "preco_por_kg": 4.99
       },
       {
         "produto": "REPOLHO LISO KG",
-        "preco": 2.99,
-        "preco_por_kg": 2.99
+        "preco": 3.99,
+        "preco_por_kg": 3.99
       },
       {
         "produto": "ALHO PORÓ UN",
@@ -133,8 +133,8 @@
       },
       {
         "produto": "MAMÃO PAPAYA KG",
-        "preco": 12.99,
-        "preco_por_kg": 12.99
+        "preco": 11.99,
+        "preco_por_kg": 11.99
       },
       {
         "produto": "BANANA PRATA KG",
@@ -163,8 +163,8 @@
       },
       {
         "produto": "MARGARINA DORIANA CREM.C/S 1KG",
-        "preco": 17.79,
-        "preco_por_kg": 17.79
+        "preco": 15.99,
+        "preco_por_kg": 15.99
       },
       {
         "produto": "LEITE RICO TIPO A 1L",
@@ -173,8 +173,8 @@
       },
       {
         "produto": "REQUEIJÃO CATUPIRY LIGHT 420G",
-        "preco": 19.99,
-        "preco_por_kg": 47.6
+        "preco": 16.99,
+        "preco_por_kg": 40.45
       },
       {
         "produto": "QUEIJO MUSSARELA RALADA G.B KG",
@@ -183,8 +183,8 @@
       },
       {
         "produto": "PRESUNTO COZIDO PERDIGÃO KG",
-        "preco": 28.9,
-        "preco_por_kg": 28.9
+        "preco": 27.9,
+        "preco_por_kg": 27.9
       },
       {
         "produto": "MORTADELA AURORA 400G",
@@ -203,13 +203,13 @@
       },
       {
         "produto": "LEITE FERMENTADO YAKULT 480G",
-        "preco": 11.49,
-        "preco_por_kg": 23.94
+        "preco": 9.99,
+        "preco_por_kg": 20.81
       },
       {
         "produto": "IOGURTE DANONE LÍQUIDO COCO 1250G",
-        "preco": 17.99,
-        "preco_por_kg": 14.39
+        "preco": 13.99,
+        "preco_por_kg": 11.19
       },
       {
         "produto": "ARROZ INTEGRAL BROTO LEGAL 1KG",
@@ -232,9 +232,9 @@
         "preco_por_kg": 3.79
       },
       {
-        "produto": "QUEIJO RALADO VIGOR 50GR",
-        "preco": 6.49,
-        "preco_por_kg": 129.8
+        "produto": "QUEIJO RALADO QUATA 50G",
+        "preco": 5.79,
+        "preco_por_kg": 115.8
       },
       {
         "produto": "AZEITONA VERDE VALE FÉRTIL SACHET 100G",
@@ -258,8 +258,8 @@
       },
       {
         "produto": "MILHO VERDE BANDEJA 700G",
-        "preco": 5.99,
-        "preco_por_kg": 8.56
+        "preco": 6.99,
+        "preco_por_kg": 9.99
       },
       {
         "produto": "ERVILHA LATA OLE 170G",
@@ -298,13 +298,18 @@
       },
       {
         "produto": "MOSTARDA CEPERA 1010G",
-        "preco": 13.99,
-        "preco_por_kg": 13.85
+        "preco": 8.99,
+        "preco_por_kg": 8.9
+      },
+      {
+        "produto": "MOLHO BARBECUE KENKO 180ML",
+        "preco": 8.99,
+        "preco_por_kg": 8.99
       },
       {
         "produto": "LEITE CONDENSADO SEMIDESNATADO ITALAC 395G TP",
-        "preco": 5.99,
-        "preco_por_kg": 15.16
+        "preco": 6.98,
+        "preco_por_kg": 17.67
       },
       {
         "produto": "CREME DE LEITE NOTCO TP 200ML",
@@ -427,9 +432,9 @@
         "preco_por_kg": 11.99
       },
       {
-        "produto": "CREME DENTAL COLGATE TRIPLA AÇÃO 180G",
-        "preco": 10.99,
-        "preco_por_kg": 61.06
+        "produto": "CREME DENTAL COLGATE TOTAL 12 ANTI TÁRTARO 180G",
+        "preco": 8.99,
+        "preco_por_kg": 49.94
       },
       {
         "produto": "SABONETE LÍQUIDO LUX GARDENIA 250ML",
@@ -443,8 +448,8 @@
       },
       {
         "produto": "SABONETE BEBE CALÊNDULA 90G",
-        "preco": 5.49,
-        "preco_por_kg": 61.0
+        "preco": 7.29,
+        "preco_por_kg": 81.0
       },
       {
         "produto": "DESODORANTE AEROSOL AXE APOLLO 150ML",
@@ -462,7 +467,7 @@
         "preco_por_kg": 8.99
       },
       {
-        "produto": "LENÇO UMEDECIDO GRANADO C/50",
+        "produto": "LENÇO UMEDECIDO INTIMUS C/16",
         "preco": 11.99,
         "preco_por_kg": 11.99
       },
@@ -473,8 +478,8 @@
       },
       {
         "produto": "BISNAGUINHA BAUDUCCO 260G",
-        "preco": 7.99,
-        "preco_por_kg": 30.73
+        "preco": 6.69,
+        "preco_por_kg": 25.73
       },
       {
         "produto": "AREIA SANITARIA EDUKAT TRAD.4KG",
@@ -487,8 +492,8 @@
         "preco_por_kg": 8.78
       }
     ],
-    "total": 1081.92,
-    "faltando": 50
+    "total": 1088.89,
+    "faltando": 49
   },
   "Arena Atacado": {
     "produtos": [],
