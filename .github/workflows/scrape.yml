@@ -21,10 +21,10 @@ jobs:
         run: pip install requests beautifulsoup4
 
       - name: Run Goodbom scraper
-        run: python scraper_goodbom.py
+        run: python scrapers/scraper_goodbom.py
 
       - name: Run Tenda scraper
-        run: python scraper_tenda.py
+        run: python scrapers/scraper_tenda.py
 
       - name: Configure Git
         run: |
@@ -33,12 +33,12 @@ jobs:
 
       - name: Commit Goodbom JSON
         run: |
-          git add docs/prices_goodbom.json
+          git add docs/prices/prices_goodbom.json
           git commit -m "Update Goodbom prices [skip ci]" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
 
       - name: Commit Tenda JSON
         run: |
-          git add docs/prices_tenda.json
+          git add docs/prices/prices_tenda.json
           git commit -m "Update Tenda prices [skip ci]" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
