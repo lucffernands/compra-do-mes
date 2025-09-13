@@ -1,120 +1,92 @@
 import requests
-import re
-import json
+import csv
 import time
 
-BASE_URL = "https://www.tendaatacado.com.br/"
-API_URL = "https://api.tendaatacado.com.br/api/public/store/search"
+# URL base da API de produtos
+API_URL = "https://www.tendaatacado.com.br/api/public/retail/product/search"
 
-INPUT_FILE = "products.txt"
-OUTPUT_JSON = "docs/prices_tenda.json"
-
-NUM_PRODUTOS = 3
-CART_ID = "28224513"  # pode ser fixo
-
-# --- Extrair token do HTML ---
-def get_token():
-    resp = requests.get(BASE_URL, timeout=15)
-    html = resp.text
-    match = re.search(r'"token"\s*:\s*"([^"]+)"', html)
-    if match:
-        return match.group(1)
-    else:
-        raise Exception("Token não encontrado")
-
-# --- Extrair peso do nome ---
-def extrair_peso(nome):
-    match = re.search(r"(\d+(?:\.\d+)?)\s*(kg|g)", nome.lower())
-    if match:
-        valor, unidade = float(match.group(1)), match.group(2)
-        return valor if unidade == "kg" else valor / 1000
-    return 1
-
-# --- Buscar produto, tenta renovar token se necessário ---
-def buscar_produto(produto, token):
+# Função para buscar produtos pelo nome
+def buscar_produtos(produto, pagina=1):
+    """
+    Busca produtos pelo nome na API da Tenda.
+    Retorna um dict com informações de produtos e paginação.
+    """
     headers = {
-        "accept": "application/json, text/plain, */*",
-        "authorization": f"Bearer {token}",
-        "desktop-platform": "true",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
         "origin": "https://www.tendaatacado.com.br",
-        "referer": "https://www.tendaatacado.com.br/",
-        "user-agent": "Mozilla/5.0"
-    }
-    params = {
-        "query": produto,
-        "page": 1,
-        "order": "relevance",
-        "save": "true",
-        "cartId": CART_ID
+        "referer": "https://www.tendaatacado.com.br/"
     }
 
-    try:
-        resp = requests.get(API_URL, headers=headers, params=params, timeout=15)
-        # Se token expirou ou inválido, renova e tenta de novo
-        if resp.status_code == 401:
-            print("Token expirado, renovando...")
-            token = get_token()
-            headers["authorization"] = f"Bearer {token}"
-            resp = requests.get(API_URL, headers=headers, params=params, timeout=15)
+    body = {
+        "search": produto,
+        "page": pagina,
+        "per_page": 20
+    }
 
-        if resp.status_code != 200:
-            print(f"Erro Tenda ({produto}): {resp.status_code}")
-            return None
-
-        data = resp.json()
-        encontrados = []
-
-        for p in data.get("products", [])[:NUM_PRODUTOS]:
-            nome = p.get("name")
-            preco = p.get("price")
-            peso_kg = extrair_peso(nome)
-            encontrados.append({
-                "supermercado": "Tenda",
-                "produto": nome,
-                "preco": preco,
-                "preco_por_kg": round(preco / peso_kg, 2)
-            })
-
-        return min(encontrados, key=lambda x: x["preco_por_kg"]) if encontrados else None
-    except Exception as e:
-        print(f"Erro Tenda ({produto}): {e}")
+    response = requests.post(API_URL, json=body, headers=headers)
+    if response.status_code != 200:
+        print(f"Erro ao buscar produtos: {response.status_code}")
         return None
+    return response.json()
 
-# --- Main ---
-def main():
-    with open(INPUT_FILE, "r", encoding="utf-8") as f:
-        produtos = [linha.strip() for linha in f if linha.strip()]
+# Função para percorrer todas as páginas de resultados
+def buscar_todos_produtos(produto):
+    todos_produtos = []
+    pagina = 1
+    while True:
+        data = buscar_produtos(produto, pagina)
+        if not data or "products" not in data:
+            break
 
-    resultados = []
-    faltando = []
+        produtos = data["products"]
+        if not produtos:
+            break
 
-    try:
-        token = get_token()
-    except Exception as e:
-        print(e)
+        for p in produtos:
+            item = {
+                "id": p.get("id"),
+                "sku": p.get("sku"),
+                "barcode": p.get("barcode"),
+                "nome": p.get("name"),
+                "url": p.get("url"),
+                "preco": p.get("price"),
+                "moeda": p.get("currency"),
+                "marca": p.get("brand"),
+                "estoque_total": p.get("totalStock"),
+                "disponibilidade": p.get("availability"),
+                "estoque_filiais": "; ".join(
+                    [f"{i['branchId']}: {i['totalAvailable']}" for i in p.get("inventory", [])]
+                )
+            }
+            todos_produtos.append(item)
+
+        # Paginação
+        if pagina >= data.get("total_pages", 0):
+            break
+        pagina += 1
+        time.sleep(0.5)  # evita sobrecarregar o servidor
+
+    return todos_produtos
+
+# Função para salvar em CSV
+def salvar_csv(produtos, arquivo="produtos_tenda.csv"):
+    if not produtos:
+        print("Nenhum produto para salvar.")
         return
 
-    for produto in produtos:
-        item = buscar_produto(produto, token)
-        if item:
-            resultados.append(item)
-        else:
-            faltando.append(produto)
-        # Evita bloqueio de IP com delay
-        time.sleep(0.5)
+    campos = produtos[0].keys()
+    with open(arquivo, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=campos)
+        writer.writeheader()
+        for p in produtos:
+            writer.writerow(p)
+    print(f"{len(produtos)} produtos salvos em {arquivo}")
 
-    with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
-        json.dump(resultados, f, ensure_ascii=False, indent=2)
-
-    print("\nProdutos encontrados Tenda:")
-    for item in resultados:
-        print(f"- {item['produto']}: R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
-
-    total = sum(item["preco"] for item in resultados)
-    print(f"\nTotal: R$ {total:.2f}")
-
-    if faltando:
-        print(f"\nProdutos não encontrados ({len(faltando)}): {', '.join(faltando)}")
-
+# Execução principal
 if __name__ == "__main__":
-    main()
+    nome_produto = input("Digite o nome do produto: ")
+    produtos = buscar_todos_produtos(nome_produto)
+    salvar_csv(produtos)
