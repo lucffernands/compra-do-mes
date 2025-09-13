@@ -1,9 +1,9 @@
 import requests
-import csv
+import json
 import time
 
 # URL base da API de produtos
-API_URL = "https://www.tendaatacado.com.br/api/public/retail/product/search"
+API_URL = "https://api.tendaatacado.com.br/api/public/store/search"
 
 # Função para buscar produtos pelo nome
 def buscar_produtos(produto, pagina=1):
@@ -13,20 +13,21 @@ def buscar_produtos(produto, pagina=1):
     """
     headers = {
         "accept": "application/json",
-        "content-type": "application/json",
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
         "origin": "https://www.tendaatacado.com.br",
         "referer": "https://www.tendaatacado.com.br/"
     }
 
-    body = {
-        "search": produto,
+    params = {
+        "query": produto,
         "page": pagina,
-        "per_page": 20
+        "order": "relevance",
+        "save": "true",
+        "cartId": "28224513"   # pode mudar, mas funciona fixo também
     }
 
-    response = requests.post(API_URL, json=body, headers=headers)
+    response = requests.get(API_URL, headers=headers, params=params)
     if response.status_code != 200:
         print(f"Erro ao buscar produtos: {response.status_code}")
         return None
@@ -57,9 +58,10 @@ def buscar_todos_produtos(produto):
                 "marca": p.get("brand"),
                 "estoque_total": p.get("totalStock"),
                 "disponibilidade": p.get("availability"),
-                "estoque_filiais": "; ".join(
-                    [f"{i['branchId']}: {i['totalAvailable']}" for i in p.get("inventory", [])]
-                )
+                "estoque_filiais": [
+                    {"filial": i["branchId"], "qtd": i["totalAvailable"]}
+                    for i in p.get("inventory", [])
+                ]
             }
             todos_produtos.append(item)
 
@@ -71,22 +73,18 @@ def buscar_todos_produtos(produto):
 
     return todos_produtos
 
-# Função para salvar em CSV
-def salvar_csv(produtos, arquivo="produtos_tenda.csv"):
+# Função para salvar em JSON
+def salvar_json(produtos, arquivo="prices_tenda.json"):
     if not produtos:
         print("Nenhum produto para salvar.")
         return
 
-    campos = produtos[0].keys()
-    with open(arquivo, mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=campos)
-        writer.writeheader()
-        for p in produtos:
-            writer.writerow(p)
+    with open(arquivo, "w", encoding="utf-8") as f:
+        json.dump(produtos, f, ensure_ascii=False, indent=4)
     print(f"{len(produtos)} produtos salvos em {arquivo}")
 
 # Execução principal
 if __name__ == "__main__":
     nome_produto = input("Digite o nome do produto: ")
     produtos = buscar_todos_produtos(nome_produto)
-    salvar_csv(produtos)
+    salvar_json(produtos)
