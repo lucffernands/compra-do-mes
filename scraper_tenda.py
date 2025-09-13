@@ -3,10 +3,21 @@ from bs4 import BeautifulSoup
 import json
 import re
 
+# Configurações
 TENDA_URL = "https://www.tendaatacado.com.br/busca?q="
 INPUT_FILE = "products.txt"
-OUTPUT_JSON = "docs/prices_tenda.json"  # arquivo separado
+OUTPUT_JSON = "docs/prices_tenda.json"
 NUM_PRODUTOS = 3
+
+# 🔹 Cabeçalhos para simular navegador
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/129.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Referer": "https://www.tendaatacado.com.br/"
+}
 
 def extrair_peso(nome_produto, info_peso):
     if info_peso:
@@ -26,7 +37,7 @@ def extrair_peso(nome_produto, info_peso):
 def buscar_tenda(produto):
     try:
         url = f"{TENDA_URL}{produto}"
-        response = requests.get(url, timeout=15)
+        response = requests.get(url, headers=HEADERS, timeout=15)  # 🔹 Agora com headers
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -46,7 +57,8 @@ def buscar_tenda(produto):
             if produto.lower() not in nome.lower():
                 continue
 
-            preco_str = preco_tag.get_text(strip=True).replace("R$", "").replace("un", "").replace(",", ".").strip()
+            preco_str = preco_tag.get_text(strip=True)
+            preco_str = preco_str.replace("R$", "").replace("un", "").replace(",", ".").strip()
 
             try:
                 preco = float(preco_str)
@@ -89,9 +101,9 @@ def main():
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(resultados_finais, f, ensure_ascii=False, indent=2)
 
-    print("\nProdutos encontrados Tenda:")
+    print("\nProdutos encontrados:")
     for item in resultados_finais:
-        print(f"- {item['produto']}: R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
+        print(f"- {item['produto']} ({item['supermercado']}): R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
 
     total = sum(item["preco"] for item in resultados_finais)
     print(f"\nTotal: R$ {total:.2f}")
