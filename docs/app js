@@ -1,0 +1,33 @@
+async function carregarMercado(mercado, arquivo) {
+  try {
+    const res = await fetch(arquivo);
+    if (!res.ok) throw new Error("Erro ao carregar " + arquivo);
+    const data = await res.json();
+
+    let html = `<h2>${mercado}</h2>`;
+
+    if (data.length > 0) {
+      html += "<ul>";
+      data.forEach(p => {
+        html += `<li>${p.produto} - ${p.preco_por_kg.toFixed(2)} R$/kg (R$ ${p.preco.toFixed(2)})</li>`;
+      });
+      html += "</ul>";
+
+      const total = data.reduce((acc, p) => acc + p.preco, 0);
+      html += `<p><strong>Total:</strong> R$ ${total.toFixed(2)}</p>`;
+    } else {
+      html += "<p>Nenhum produto encontrado.</p>";
+    }
+
+    document.getElementById("resultado").innerHTML += html;
+  } catch (err) {
+    console.error(err);
+    document.getElementById("resultado").innerHTML += `<p>Erro ao buscar preços de ${mercado}.</p>`;
+  }
+}
+
+document.getElementById("buscar").addEventListener("click", async () => {
+  document.getElementById("resultado").innerHTML = "";
+  await carregarMercado("Goodbom", "prices_goodbom.json");
+  await carregarMercado("Tenda", "prices_tenda.json");
+});
