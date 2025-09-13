@@ -3,21 +3,6 @@ from bs4 import BeautifulSoup
 import json
 import re
 
-#Teste Arena
-def nomes_batem(produto_busca, nome_site):
-    # deixa tudo em minúsculo
-    p = produto_busca.lower()
-    n = nome_site.lower()
-
-    # divide em palavras
-    palavras_p = set(p.split())
-    palavras_n = set(n.split())
-
-    # exige que pelo menos metade das palavras do termo de busca estejam no nome encontrado
-    intersecao = palavras_p.intersection(palavras_n)
-    return len(intersecao) >= max(1, len(palavras_p) // 2)
-#--------------
-
 # Configurações
 GOODBOM_URL = "https://www.goodbom.com.br/hortolandia/busca?q="
 ARENA_URL = "https://www.arenaatacado.com.br/on/demandware.store/Sites-Arena-Site/pt_BR/Search-Show?q="
@@ -29,18 +14,15 @@ def extrair_peso(nome_produto):
     match = re.search(r"(\d+)\s*g", nome_produto.lower())
     if match:
         return int(match.group(1)) / 1000
-    match = re.search(r"(\d+[,.]?\d*)\s*kg", nome_produto.lower())
-    if match:
-        return float(match.group(1).replace(",", "."))
-    return 1  # assume 1kg se não achar peso
+    return 1
 
 def buscar_goodbom(produto):
     try:
         url = f"{GOODBOM_URL}{produto}"
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
 
+        soup = BeautifulSoup(response.text, "html.parser")
         resultados = soup.find_all("span", class_="product-name")[:NUM_PRODUTOS]
         encontrados = []
 
@@ -64,6 +46,7 @@ def buscar_goodbom(produto):
             preco_kg = round(preco / peso_kg, 2)
 
             encontrados.append({
+                "supermercado": "Goodbom",
                 "produto": nome,
                 "preco": preco,
                 "preco_por_kg": preco_kg
@@ -80,8 +63,12 @@ def buscar_arena(produto):
         url = f"{ARENA_URL}{produto}"
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
 
+        # Salva HTML bruto para debug
+        with open("arena_debug.html", "w", encoding="utf-8") as f:
+            f.write(response.text)
+
+        soup = BeautifulSoup(response.text, "html.parser")
         resultados = soup.find_all("div", class_="productCard")[:NUM_PRODUTOS]
         encontrados = []
 
@@ -92,7 +79,7 @@ def buscar_arena(produto):
                 continue
 
             nome = nome_span.get_text(strip=True)
-            if not nomes_batem(produto, nome): 
+            if produto.lower() not in nome.lower():
                 continue
 
             preco_str = preco_span.get_text(strip=True).replace("R$", "").replace(".", "").replace(",", ".").strip()
@@ -111,6 +98,7 @@ def buscar_arena(produto):
             preco_kg = round(preco / peso_kg, 2)
 
             encontrados.append({
+                "supermercado": "Arena Atacado",
                 "produto": nome,
                 "preco": preco,
                 "preco_por_kg": preco_kg
@@ -122,29 +110,23 @@ def buscar_arena(produto):
         print(f"Erro Arena ({produto}): {e}")
     return None
 
-def montar_carrinho(nome_mercado, produtos_lista, func_scraper):
-    carrinho = {"produtos": [], "total": 0.0, "faltando": 0}
-    for produto in produtos_lista:
-        item = func_scraper(produto)
-        if item:
-            carrinho["produtos"].append(item)
-            carrinho["total"] += item["preco"]
-        else:
-            carrinho["faltando"] += 1
-    carrinho["total"] = round(carrinho["total"], 2)
-    return carrinho
-
 def main():
     with open(INPUT_FILE, "r", encoding="utf-8") as f:
         produtos_lista = [linha.strip() for linha in f if linha.strip()]
 
-    resultados = {
-        "Goodbom": montar_carrinho("Goodbom", produtos_lista, buscar_goodbom),
-        "Arena Atacado": montar_carrinho("Arena Atacado", produtos_lista, buscar_arena)
-    }
+    resultados_finais = []
+
+    for produto in produtos_lista:
+        item_goodbom = buscar_goodbom(produto)
+        item_arena = buscar_arena(produto)
+
+        if item_goodbom:
+            resultados_finais.append(item_goodbom)
+        if item_arena:
+            resultados_finais.append(item_arena)
 
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
-        json.dump(resultados, f, ensure_ascii=False, indent=2)
+        json.dump(resultados_finais, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
     main()
