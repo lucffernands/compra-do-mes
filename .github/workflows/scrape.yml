@@ -6,7 +6,7 @@ on:
     - cron: "0 12 * * *" # roda todo dia às 12h UTC
 
 jobs:
-  run-scraper:
+  run-scrapers:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,14 +20,25 @@ jobs:
       - name: Install dependencies
         run: pip install requests beautifulsoup4
 
-      - name: Run scraper
-        run: python scraper.py
+      # --- Goodbom ---
+      - name: Run scraper Goodbom
+        run: python scraper_goodbom.py
 
-      - name: Upload prices.json
+      - name: Upload Goodbom prices
         uses: actions/upload-artifact@v4
         with:
-          name: prices
-          path: docs/prices.json
+          name: prices-goodbom
+          path: docs/prices_goodbom.json
+
+      # --- Arena ---
+      - name: Run scraper Arena
+        run: python scraper_arena.py
+
+      - name: Upload Arena prices
+        uses: actions/upload-artifact@v4
+        with:
+          name: prices-arena
+          path: docs/prices_arena.json
 
       - name: Upload Arena debug HTML
         if: always()
