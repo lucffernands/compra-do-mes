@@ -21,9 +21,6 @@ jobs:
 
       # --- Instalar dependências ---
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
-
-      - name: Install dependencies
         run: pip install requests beautifulsoup4 unidecode
 
       # --- Rodar Scraper Goodbom ---
