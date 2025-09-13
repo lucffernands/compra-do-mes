@@ -30,19 +30,12 @@ jobs:
           name: prices-goodbom
           path: docs/prices_goodbom.json
 
-      # --- Arena ---
-      - name: Run scraper Arena
-        run: python scraper_arena.py
+      # --- Tenda ---
+      - name: Run scraper Tenda
+        run: python scraper_tenda.py
 
-      - name: Upload Arena prices
+      - name: Upload Tenda prices
         uses: actions/upload-artifact@v4
         with:
           name: prices-arena
           path: docs/prices_arena.json
-
-      - name: Upload Arena debug HTML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: arena-debug
-          path: arena_debug.html
