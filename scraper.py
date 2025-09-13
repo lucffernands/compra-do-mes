@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import re
+import re""
 
 GOODBOM_URL = "https://www.goodbom.com.br/hortolandia/busca?q="
 INPUT_FILE = "products.txt"
