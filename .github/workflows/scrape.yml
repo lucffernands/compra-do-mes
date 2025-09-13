@@ -1,4 +1,4 @@
-name: Scraper
+name: Scrapers
 
 on:
   workflow_dispatch:
@@ -21,21 +21,25 @@ jobs:
         run: pip install requests beautifulsoup4
 
       # --- Goodbom ---
-      - name: Run scraper Goodbom
+      - name: Run Goodbom scraper
         run: python scraper_goodbom.py
 
-      - name: Upload Goodbom prices
-        uses: actions/upload-artifact@v4
-        with:
-          name: prices-goodbom
-          path: docs/prices_goodbom.json
+      - name: Commit Goodbom JSON
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/prices_goodbom.json
+          git commit -m "Update Goodbom prices [skip ci]" || echo "No changes to commit"
+          git push
 
       # --- Tenda ---
-      - name: Run scraper Tenda
+      - name: Run Tenda scraper
         run: python scraper_tenda.py
 
-      - name: Upload Tenda prices
-        uses: actions/upload-artifact@v4
-        with:
-          name: prices-arena
-          path: docs/prices_arena.json
+      - name: Commit Tenda JSON
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/prices_tenda.json
+          git commit -m "Update Tenda prices [skip ci]" || echo "No changes to commit"
+          git push
