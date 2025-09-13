@@ -3,17 +3,12 @@ from bs4 import BeautifulSoup
 import json
 import re
 
-# Configurações
 TENDA_URL = "https://www.tendaatacado.com.br/busca?q="
 INPUT_FILE = "products.txt"
-OUTPUT_JSON = "docs/prices_tenda.json"
+OUTPUT_JSON = "docs/prices_tenda.json"  # arquivo separado
 NUM_PRODUTOS = 3
 
 def extrair_peso(nome_produto, info_peso):
-    """
-    Tenta extrair peso do nome ou do campo 'Peso médio'
-    """
-    # Pelo campo Peso médio
     if info_peso:
         match = re.search(r"(\d+[,.]?\d*)\s*kg", info_peso.lower())
         if match:
@@ -22,12 +17,11 @@ def extrair_peso(nome_produto, info_peso):
         if match_g:
             return int(match_g.group(1)) / 1000
 
-    # Pelo nome do produto
     match_nome = re.search(r"(\d+)\s*g", nome_produto.lower())
     if match_nome:
         return int(match_nome.group(1)) / 1000
 
-    return 1.0  # fallback
+    return 1.0
 
 def buscar_tenda(produto):
     try:
@@ -52,8 +46,7 @@ def buscar_tenda(produto):
             if produto.lower() not in nome.lower():
                 continue
 
-            preco_str = preco_tag.get_text(strip=True)
-            preco_str = preco_str.replace("R$", "").replace("un", "").replace(",", ".").strip()
+            preco_str = preco_tag.get_text(strip=True).replace("R$", "").replace("un", "").replace(",", ".").strip()
 
             try:
                 preco = float(preco_str)
@@ -93,14 +86,12 @@ def main():
         else:
             faltando.append(produto)
 
-    # Salvar JSON
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(resultados_finais, f, ensure_ascii=False, indent=2)
 
-    # Exibir resumo
-    print("\nProdutos encontrados:")
+    print("\nProdutos encontrados Tenda:")
     for item in resultados_finais:
-        print(f"- {item['produto']} ({item['supermercado']}): R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
+        print(f"- {item['produto']}: R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
 
     total = sum(item["preco"] for item in resultados_finais)
     print(f"\nTotal: R$ {total:.2f}")
