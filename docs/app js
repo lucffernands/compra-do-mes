@@ -1,7 +1,7 @@
 document.getElementById('buscar').addEventListener('click', async () => {
   const mercados = {
-    "Goodbom": "prices_goodbom.json",
-    "Tenda": "prices_tenda.json"
+    "Goodbom": "prices/prices_goodbom.json",
+    "Tenda": "prices/prices_tenda.json"
   };
 
   const resultadoDiv = document.getElementById('resultado');
