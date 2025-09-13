@@ -1,50 +1,53 @@
 import requests
+from bs4 import BeautifulSoup
 import json
 import re
 
-# Configurações
-ARENA_API_URL = "https://www.arenaatacado.com.br/on/demandware.store/Sites-Arena-Site/pt_BR/Search-Show"
+ARENA_URL = "https://www.arenaatacado.com.br/on/demandware.store/Sites-Arena-Site/pt_BR/Search-Show?q="
 INPUT_FILE = "products.txt"
 OUTPUT_JSON = "docs/prices_arena.json"
 NUM_PRODUTOS = 3
 
-def extrair_peso(nome_produto):
-    match = re.search(r"(\d+[,.]?\d*)\s*(kg|g)", nome_produto.lower())
-    if match:
-        valor = float(match.group(1).replace(",", "."))
-        if match.group(2) == "g":
-            return valor / 1000
-        return valor
-    return 1
+def extrair_peso(nome_produto, card):
+    peso_kg = 1
+    peso_info = card.find("div", class_="productPrice-averageWeight__price")
+    if peso_info:
+        match = re.search(r"(\d+[,.]?\d*)\s*kg", peso_info.get_text(strip=True).lower())
+        if match:
+            peso_kg = float(match.group(1).replace(",", "."))
+    return peso_kg
 
-def buscar_arena_api(produto):
+def buscar_arena(produto):
     try:
-        params = {
-            "q": produto,
-            "start": 0,
-            "count": NUM_PRODUTOS
-        }
-        headers = {
-            "Accept": "application/json"
-        }
-
-        response = requests.get(ARENA_API_URL, params=params, headers=headers, timeout=15)
+        url = f"{ARENA_URL}{produto}"
+        response = requests.get(url, timeout=15)
         response.raise_for_status()
-        data = response.json()
 
+        # Salva HTML bruto para debug
+        with open("arena_debug.html", "w", encoding="utf-8") as f:
+            f.write(response.text)
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        resultados = soup.find_all("div", class_="productCard")[:NUM_PRODUTOS]
         encontrados = []
-        for item in data.get("hits", []):
-            nome = item.get("productName") or item.get("name")
-            if not nome or produto.lower() not in nome.lower():
+
+        for card in resultados:
+            nome_span = card.find("span", class_="productCard__title")
+            preco_span = card.find("span", class_="productPrice__price")
+            if not nome_span or not preco_span:
                 continue
 
-            preco_str = str(item.get("price", "0")).replace(",", ".")
+            nome = nome_span.get_text(strip=True)
+            if produto.lower() not in nome.lower():
+                continue
+
+            preco_str = preco_span.get_text(strip=True).replace("R$", "").replace(".", "").replace(",", ".").strip()
             try:
                 preco = float(preco_str)
             except ValueError:
                 continue
 
-            peso_kg = extrair_peso(nome)
+            peso_kg = extrair_peso(nome, card)
             preco_kg = round(preco / peso_kg, 2)
 
             encontrados.append({
@@ -67,7 +70,7 @@ def main():
     resultados_finais = []
 
     for produto in produtos_lista:
-        item_arena = buscar_arena_api(produto)
+        item_arena = buscar_arena(produto)
         if item_arena:
             resultados_finais.append(item_arena)
 
