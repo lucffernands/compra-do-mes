@@ -5,7 +5,7 @@ import re
 
 GOODBOM_URL = "https://www.goodbom.com.br/hortolandia/busca?q="
 INPUT_FILE = "products.txt"
-OUTPUT_JSON = "docs/prices.json"
+OUTPUT_JSON = "docs/prices_goodbom.json"  # arquivo separado
 NUM_PRODUTOS = 3
 
 def extrair_peso(nome):
@@ -52,13 +52,27 @@ def main():
         produtos = [linha.strip() for linha in f if linha.strip()]
 
     resultados = []
+    faltando = []
+
     for produto in produtos:
         item = buscar_goodbom(produto)
         if item:
             resultados.append(item)
+        else:
+            faltando.append(produto)
 
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(resultados, f, ensure_ascii=False, indent=2)
+
+    print("\nProdutos encontrados Goodbom:")
+    for item in resultados:
+        print(f"- {item['produto']}: R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
+
+    total = sum(item["preco"] for item in resultados)
+    print(f"\nTotal: R$ {total:.2f}")
+
+    if faltando:
+        print(f"\nProdutos não encontrados ({len(faltando)}): {', '.join(faltando)}")
 
 if __name__ == "__main__":
     main()
