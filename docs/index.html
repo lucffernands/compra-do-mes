@@ -12,40 +12,7 @@
     <div id="resultado"></div>
   </div>
 
-  <script>
-    document.getElementById('buscar').addEventListener('click', async () => {
-      try {
-        const res = await fetch('prices.json');
-        const data = await res.json();
-        const resultadoDiv = document.getElementById('resultado');
-        resultadoDiv.innerHTML = "";
-
-        for (const mercado in data) {
-          const carrinho = data[mercado];
-          let html = `<h2>${mercado}</h2>`;
-
-          if (carrinho.produtos.length > 0) {
-            html += "<ul>";
-            carrinho.produtos.forEach(p => {
-              html += `<li>${p.produto} - ${p.preco_por_kg.toFixed(2)} R$/kg (R$ ${p.preco.toFixed(2)})</li>`;
-            });
-            html += "</ul>";
-          } else {
-            html += "<p>Nenhum produto encontrado.</p>";
-          }
-
-          html += `<p><strong>Total:</strong> R$ ${carrinho.total.toFixed(2)}</p>`;
-          if (carrinho.faltando > 0) {
-            html += `<p><em>Faltaram ${carrinho.faltando} produtos</em></p>`;
-          }
-
-          resultadoDiv.innerHTML += html;
-        }
-      } catch (err) {
-        document.getElementById('resultado').innerHTML = "Erro ao buscar preços.";
-        console.error(err);
-      }
-    });
-  </script>
+  <!-- Script separado -->
+  <script src="app.js"></script>
 </body>
 </html>
