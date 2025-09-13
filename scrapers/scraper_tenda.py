@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import re
+from unidecode import unidecode
 
 # Configurações
 TENDA_URL = "https://www.tendaatacado.com.br/busca?q="
@@ -16,10 +17,16 @@ HEADERS = {
                   "Chrome/129.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Referer": "https://www.tendaatacado.com.br/"
+    "Referer": "https://www.tendaatacado.com.br/",
+    "Connection": "keep-alive",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-User": "?1",
 }
 
 def extrair_peso(nome_produto, info_peso):
+    # Tenta pelo campo Peso médio
     if info_peso:
         match = re.search(r"(\d+[,.]?\d*)\s*kg", info_peso.lower())
         if match:
@@ -28,16 +35,17 @@ def extrair_peso(nome_produto, info_peso):
         if match_g:
             return int(match_g.group(1)) / 1000
 
+    # Pelo nome do produto
     match_nome = re.search(r"(\d+)\s*g", nome_produto.lower())
     if match_nome:
         return int(match_nome.group(1)) / 1000
 
-    return 1.0
+    return 1.0  # fallback
 
 def buscar_tenda(produto):
     try:
         url = f"{TENDA_URL}{produto}"
-        response = requests.get(url, headers=HEADERS, timeout=15)  # 🔹 Agora com headers
+        response = requests.get(url, headers=HEADERS, timeout=15)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -54,12 +62,11 @@ def buscar_tenda(produto):
                 continue
 
             nome = nome_tag.get_text(strip=True)
-            if produto.lower() not in nome.lower():
+            if unidecode(produto.lower()) not in unidecode(nome.lower()):
                 continue
 
             preco_str = preco_tag.get_text(strip=True)
             preco_str = preco_str.replace("R$", "").replace("un", "").replace(",", ".").strip()
-
             try:
                 preco = float(preco_str)
             except ValueError:
@@ -98,9 +105,11 @@ def main():
         else:
             faltando.append(produto)
 
+    # Salvar JSON separado
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(resultados_finais, f, ensure_ascii=False, indent=2)
 
+    # Exibir resumo
     print("\nProdutos encontrados:")
     for item in resultados_finais:
         print(f"- {item['produto']} ({item['supermercado']}): R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
