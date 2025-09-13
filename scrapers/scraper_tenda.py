@@ -1,59 +1,73 @@
 import requests
-from bs4 import BeautifulSoup
-import json
 import re
-import os
+import json
+import time
 
-# --- Configurações ---
-TENDA_URL = "https://www.tendaatacado.com.br/busca?q="
+BASE_URL = "https://www.tendaatacado.com.br/"
+API_URL = "https://api.tendaatacado.com.br/api/public/store/search"
+
 INPUT_FILE = "products.txt"
 OUTPUT_JSON = "docs/prices_tenda.json"
+
 NUM_PRODUTOS = 3
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/129.0.0.0 Safari/537.36"
-}
+CART_ID = "28224513"  # pode ser fixo
 
-def extrair_peso(nome, peso_texto):
-    """
-    Extrai peso em KG a partir do nome ou do texto do peso médio.
-    """
-    match_nome = re.search(r"(\d+)\s*g", nome.lower())
-    match_peso = re.search(r"([\d,.]+)\s*kg", peso_texto.lower()) if peso_texto else None
+# --- Extrair token do HTML ---
+def get_token():
+    resp = requests.get(BASE_URL, timeout=15)
+    html = resp.text
+    match = re.search(r'"token"\s*:\s*"([^"]+)"', html)
+    if match:
+        return match.group(1)
+    else:
+        raise Exception("Token não encontrado")
 
-    if match_peso:
-        return float(match_peso.group(1).replace(",", "."))
-    if match_nome:
-        return int(match_nome.group(1)) / 1000
+# --- Extrair peso do nome ---
+def extrair_peso(nome):
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(kg|g)", nome.lower())
+    if match:
+        valor, unidade = float(match.group(1)), match.group(2)
+        return valor if unidade == "kg" else valor / 1000
     return 1
 
-def buscar_tenda(produto):
+# --- Buscar produto, tenta renovar token se necessário ---
+def buscar_produto(produto, token):
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "authorization": f"Bearer {token}",
+        "desktop-platform": "true",
+        "origin": "https://www.tendaatacado.com.br",
+        "referer": "https://www.tendaatacado.com.br/",
+        "user-agent": "Mozilla/5.0"
+    }
+    params = {
+        "query": produto,
+        "page": 1,
+        "order": "relevance",
+        "save": "true",
+        "cartId": CART_ID
+    }
+
     try:
-        resp = requests.get(f"{TENDA_URL}{produto}", headers=HEADERS, timeout=15)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
+        resp = requests.get(API_URL, headers=headers, params=params, timeout=15)
+        # Se token expirou ou inválido, renova e tenta de novo
+        if resp.status_code == 401:
+            print("Token expirado, renovando...")
+            token = get_token()
+            headers["authorization"] = f"Bearer {token}"
+            resp = requests.get(API_URL, headers=headers, params=params, timeout=15)
+
+        if resp.status_code != 200:
+            print(f"Erro Tenda ({produto}): {resp.status_code}")
+            return None
+
+        data = resp.json()
         encontrados = []
 
-        cards = soup.find_all("a", class_="showcase-card-content")[:NUM_PRODUTOS]
-        for card in cards:
-            nome_tag = card.find("h3", class_="TitleCardComponent")
-            preco_tag = card.find("div", class_="SimplePriceComponent")
-            peso_tag = card.find("div", class_="WeightInfoComponent")
-
-            if not nome_tag or not preco_tag:
-                continue
-
-            nome = nome_tag.get_text(strip=True)
-            preco_texto = preco_tag.get_text(strip=True)
-            peso_texto = peso_tag.get_text(" ", strip=True) if peso_tag else ""
-
-            try:
-                preco = float(re.sub(r"[^\d,]", "", preco_texto).replace(",", "."))
-            except:
-                continue
-
-            peso_kg = extrair_peso(nome, peso_texto)
+        for p in data.get("products", [])[:NUM_PRODUTOS]:
+            nome = p.get("name")
+            preco = p.get("price")
+            peso_kg = extrair_peso(nome)
             encontrados.append({
                 "supermercado": "Tenda",
                 "produto": nome,
@@ -66,6 +80,7 @@ def buscar_tenda(produto):
         print(f"Erro Tenda ({produto}): {e}")
         return None
 
+# --- Main ---
 def main():
     with open(INPUT_FILE, "r", encoding="utf-8") as f:
         produtos = [linha.strip() for linha in f if linha.strip()]
@@ -73,14 +88,21 @@ def main():
     resultados = []
     faltando = []
 
+    try:
+        token = get_token()
+    except Exception as e:
+        print(e)
+        return
+
     for produto in produtos:
-        item = buscar_tenda(produto)
+        item = buscar_produto(produto, token)
         if item:
             resultados.append(item)
         else:
             faltando.append(produto)
+        # Evita bloqueio de IP com delay
+        time.sleep(0.5)
 
-    os.makedirs(os.path.dirname(OUTPUT_JSON), exist_ok=True)
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(resultados, f, ensure_ascii=False, indent=2)
 
