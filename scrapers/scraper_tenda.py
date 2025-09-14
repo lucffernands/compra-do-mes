@@ -2,15 +2,17 @@ import requests
 import json
 import re
 
-TENDA_URL = "https://tendaatacado.com.br/api/search?query={produto}&page=1&order=relevance&save=true"
+TENDA_URL = "https://www.tendaatacado.com.br/api/public/retail/product/search"
 INPUT_FILE = "products.txt"
 OUTPUT_JSON = "docs/prices_tenda.json"
 NUM_PRODUTOS = 3
 
-# headers iguais ao que você pegou no DevTools/XHR
 HEADERS = {
-    "accept": "application/json, text/plain, */*",
-    "user-agent": "Mozilla/5.0",
+    "accept": "application/json",
+    "content-type": "application/json",
+    "origin": "https://www.tendaatacado.com.br",
+    "referer": "https://www.tendaatacado.com.br/",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
 }
 
 def extrair_peso(nome):
@@ -24,8 +26,12 @@ def extrair_peso(nome):
 
 def buscar_tenda(produto):
     try:
-        url = TENDA_URL.format(produto=produto.replace(" ", "+"))
-        resp = requests.get(url, headers=HEADERS, timeout=15)
+        body = {
+            "search": produto,
+            "page": 1,
+            "per_page": 20
+        }
+        resp = requests.post(TENDA_URL, headers=HEADERS, json=body, timeout=15)
         resp.raise_for_status()
         data = resp.json()
 
