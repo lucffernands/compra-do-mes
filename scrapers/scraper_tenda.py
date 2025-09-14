@@ -1,29 +1,64 @@
 import requests
-import json
+import os
 
-url = "https://api.tendaatacado.com.br/api/public/retail/product/search"
+CEP = "13187-166"
+BASE_DIR = os.path.join("docs", "prices")
+FILE_PATH = os.path.join(BASE_DIR, "prices_tenda.py")
 
-headers = {
-    "accept": "application/json",
-    "content-type": "application/json",
-    "origin": "https://www.tendaatacado.com.br",
-    "referer": "https://www.tendaatacado.com.br/",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
-}
-
-payload = {
-    "search": "bacon",
-    "page": 1,
-    "per_page": 20
-}
-
-try:
-    print("🔍 Buscando Tenda: BACON")
-    response = requests.post(url, headers=headers, json=payload)
+def get_bearer_token():
+    url = "https://api.tendaatacado.com.br/api/public/oauth/access-token?g-recaptcha-response=null"
+    response = requests.post(url)
     response.raise_for_status()
-    
     data = response.json()
-    print(json.dumps(data, indent=2, ensure_ascii=False))
+    return data["access_token"]
 
-except requests.exceptions.RequestException as e:
-    print(f"Erro Tenda (BACON): {e}")
+def set_cep(token):
+    url = "https://api.tendaatacado.com.br/api/shopping-cart"
+    headers = {
+        "X-Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "customer": {
+            "zipcode": CEP
+        },
+        "deliveryType": "DELIVERY"
+    }
+    response = requests.put(url, json=payload, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+def buscar_produto(token, query="Bacon"):
+    url = f"https://api.tendaatacado.com.br/api/public/retail/product?query={query}"
+    headers = {
+        "X-Authorization": f"Bearer {token}"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    produtos = response.json().get("products", [])
+    if not produtos:
+        return None, None
+    produto = produtos[0]
+    nome = produto.get("name")
+    preco = produto.get("price")
+    return nome, preco
+
+def salvar_preco(nome, preco):
+    if not os.path.exists(BASE_DIR):
+        os.makedirs(BASE_DIR)
+    with open(FILE_PATH, "w", encoding="utf-8") as f:
+        f.write(f'PRODUCT_NAME = "{nome}"\n')
+        f.write(f'PRODUCT_PRICE = {preco}\n')
+    print(f"Salvo: {nome} - R$ {preco}")
+
+def main():
+    token = get_bearer_token()
+    set_cep(token)
+    nome, preco = buscar_produto(token)
+    if nome and preco:
+        salvar_preco(nome, preco)
+    else:
+        print("Produto não encontrado.")
+
+if __name__ == "__main__":
+    main()
