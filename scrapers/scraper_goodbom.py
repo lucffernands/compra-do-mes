@@ -1,6 +1,9 @@
-import requests
-from bs4 import BeautifulSoup
-import json
+import sys
+sys.exit("⏸️ Scraper Goodbom desativado temporariamente")
+
+import requests  
+from bs4 import BeautifulSoup  
+import json  
 import re
 
 GOODBOM_URL = "https://www.goodbom.com.br/hortolandia/busca?q="
