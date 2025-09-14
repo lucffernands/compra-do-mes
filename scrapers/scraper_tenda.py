@@ -1,73 +1,84 @@
 import requests
 import json
-import time
+import re
 
-# URL base da API de produtos
-API_URL = "https://api.tendaatacado.com.br/api/public/store/search"
+TENDA_URL = "https://tendaatacado.com.br/api/search?query={produto}&page=1&order=relevance&save=true"
+INPUT_FILE = "products.txt"
+OUTPUT_JSON = "docs/prices_tenda.json"
+NUM_PRODUTOS = 3
 
-# Quantidade máxima de produtos por termo
-MAX_PRODUTOS = 3
+# headers iguais ao que você pegou no DevTools/XHR
+HEADERS = {
+    "accept": "application/json, text/plain, */*",
+    "user-agent": "Mozilla/5.0",
+}
 
-# Função para buscar produtos pelo nome
-def buscar_produtos(produto, pagina=1):
-    """
-    Busca produtos pelo nome na API da Tenda.
-    Retorna a lista de produtos da página.
-    """
-    headers = {
-        "accept": "application/json",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
-        "origin": "https://www.tendaatacado.com.br",
-        "referer": "https://www.tendaatacado.com.br/",
-        "authorization": "Bearer 6ec3a499047c4600f987c4f928ac7524"  # token que você pegou no XHR
-    }
+def extrair_peso(nome):
+    match = re.search(r"(\d+)\s*g", nome.lower())
+    if match:
+        return int(match.group(1)) / 1000
+    match = re.search(r"(\d+)\s*kg", nome.lower())
+    if match:
+        return float(match.group(1))
+    return 1
 
-    params = {
-        "query": produto,
-        "page": pagina,
-        "order": "relevance",
-        "save": "true",
-        "cartId": 28224513  # ou outro que você usa
-    }
+def buscar_tenda(produto):
+    try:
+        url = TENDA_URL.format(produto=produto.replace(" ", "+"))
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
 
-    response = requests.get(API_URL, headers=headers, params=params)
-    if response.status_code != 200:
-        print(f"❌ Erro ao buscar {produto} (página {pagina}): {response.status_code}")
-        return []
-    data = response.json()
-    return data.get("products", [])
+        encontrados = []
+        for item in data.get("products", [])[:NUM_PRODUTOS]:
+            nome = item.get("name", "").strip()
+            preco = item.get("price")
 
-# Função principal para percorrer os produtos do arquivo
-def buscar_todos_produtos(arquivo_produtos="products.txt"):
-    resultados = []
-    with open(arquivo_produtos, "r", encoding="utf-8") as f:
-        produtos_lista = [linha.strip() for linha in f if linha.strip()]
+            if not nome or preco is None:
+                continue
+            if produto.lower() not in nome.lower():
+                continue
 
-    for nome_produto in produtos_lista:
-        print(f"🔍 Buscando: {nome_produto}")
-        produtos_api = buscar_produtos(nome_produto, pagina=1)
-        for p in produtos_api[:MAX_PRODUTOS]:
-            item = {
+            peso_kg = extrair_peso(nome)
+            encontrados.append({
                 "supermercado": "Tenda",
-                "produto": p.get("name"),
-                "preco": p.get("price"),
-                "preco_por_kg": p.get("price")  # aqui considera que é preço unitário/kg
-            }
+                "produto": nome,
+                "preco": preco,
+                "preco_por_kg": round(preco / peso_kg, 2)
+            })
+
+        return min(encontrados, key=lambda x: x["preco_por_kg"]) if encontrados else None
+
+    except Exception as e:
+        print(f"Erro Tenda ({produto}): {e}")
+        return None
+
+def main():
+    with open(INPUT_FILE, "r", encoding="utf-8") as f:
+        produtos = [linha.strip() for linha in f if linha.strip()]
+
+    resultados = []
+    faltando = []
+
+    for produto in produtos:
+        item = buscar_tenda(produto)
+        if item:
             resultados.append(item)
-        time.sleep(0.5)
-    return resultados
+        else:
+            faltando.append(produto)
 
-# Salvar em JSON
-def salvar_json(produtos, arquivo="prices_tenda.json"):
-    if not produtos:
-        print("Nenhum produto para salvar.")
-        return
-    with open(arquivo, "w", encoding="utf-8") as f:
-        json.dump(produtos, f, ensure_ascii=False, indent=2)
-    print(f"💾 {len(produtos)} produtos salvos em {arquivo}")
+    with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+        json.dump(resultados, f, ensure_ascii=False, indent=2)
 
-# Execução principal
+    print("\nProdutos encontrados Tenda:")
+    for item in resultados:
+        print(f"- {item['produto']}: R$ {item['preco']} | R$ {item['preco_por_kg']}/kg")
+
+    total = sum(item["preco"] for item in resultados)
+    print(f"\nTotal: R$ {total:.2f}")
+
+    if faltando:
+        print(f"\nProdutos não encontrados ({len(faltando)}): {', '.join(faltando)}")
+
 if __name__ == "__main__":
-    produtos_encontrados = buscar_todos_produtos()
-    salvar_json(produtos_encontrados)
+    main()
