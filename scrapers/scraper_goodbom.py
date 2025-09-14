@@ -1,6 +1,3 @@
-import sys
-sys.exit("⏸️ Scraper Goodbom desativado temporariamente")
-
 import requests  
 from bs4 import BeautifulSoup  
 import json  
