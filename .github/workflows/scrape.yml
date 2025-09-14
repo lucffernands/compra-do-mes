@@ -24,8 +24,8 @@ jobs:
         run: pip install requests beautifulsoup4 unidecode
 
       # --- Rodar Scraper Goodbom ---
-      - name: Run Goodbom scraper
-        run: python scrapers/scraper_goodbom.py
+      #- name: Run Goodbom scraper
+      #  run: python scrapers/scraper_goodbom.py
 
       # --- Rodar Scraper Tenda ---
       - name: Run Tenda scraper
